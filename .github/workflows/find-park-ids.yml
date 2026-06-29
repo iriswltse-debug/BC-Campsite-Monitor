@@ -1,0 +1,37 @@
+name: Find Park IDs
+
+# A helper you run by hand to discover the ID numbers camply needs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rec_area:
+        description: "BC Parks area ID (leave BLANK the first time to list the areas)"
+        required: false
+        default: ""
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install camply
+        run: pip install camply
+
+      - name: List recreation areas or campgrounds
+        run: |
+          if [ -z "${{ github.event.inputs.rec_area }}" ]; then
+            echo "=============== BC PARKS RECREATION AREAS ==============="
+            echo "Find the row that says 'BC Parks' and note its ID number."
+            echo
+            camply recreation-areas --provider goingtocamp
+          else
+            echo "=========== CAMPGROUNDS IN AREA ${{ github.event.inputs.rec_area }} ==========="
+            echo "Each row is a park. Note the ID of every park you want to watch."
+            echo
+            camply campgrounds --provider goingtocamp --rec-area "${{ github.event.inputs.rec_area }}"
+          fi
