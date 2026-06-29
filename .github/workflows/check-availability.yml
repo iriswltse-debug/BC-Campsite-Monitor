@@ -1,17 +1,13 @@
 name: Check BC Parks Availability
 
-# Runs automatically on a schedule (on GitHub's servers, not your computer)
-# and can also be run by hand from the Actions tab.
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes (times are in UTC)
-  workflow_dispatch: {}       # adds a "Run workflow" button in the Actions tab
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
 
-# Lets the workflow save its "already seen" memory file back to the repo
 permissions:
   contents: write
 
-# Never run two checks at the same time
 concurrency:
   group: bc-campsite-check
   cancel-in-progress: false
@@ -21,16 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # ============================================================
-      #  EDIT THESE SETTINGS  (this is the only part you change)
+      #  YOUR SETTINGS
       # ============================================================
-      REC_AREA: "REPLACE_WITH_BC_PARKS_ID"   # BC Parks area ID, from the "Find Park IDs" workflow
-      START_DATE: "2026-06-27"               # first night to watch (YYYY-MM-DD)
+      REC_AREA: "12"                         # BC Parks
+      START_DATE: "2026-06-29"               # first night to watch (YYYY-MM-DD)
       END_DATE: "2026-09-15"                 # last night to watch  (YYYY-MM-DD)
-      CAMPGROUNDS: ""                        # space-separated park IDs, e.g. "-100 -101 -102"
-                                             # leave blank to watch ALL BC Parks campgrounds
+      # Golden Ears, Cultus Lake, Porteau Cove, Alice Lake, Nairn Falls
+      CAMPGROUNDS: "-2147483606 -2147483623 -2147483550 -2147483647 -2147483564"
       # ============================================================
 
-      # These come from repository Secrets — you never put real values here.
       EMAIL_TO_ADDRESS: ${{ secrets.EMAIL_TO_ADDRESS }}
       EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
       EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
@@ -47,7 +42,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install camply
-        run: pip install camply
+        run: pip install "git+https://github.com/juftin/camply.git@refs/pull/378/head"
 
       - name: Search for available campsites
         run: |
