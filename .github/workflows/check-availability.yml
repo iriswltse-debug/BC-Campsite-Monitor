@@ -1,0 +1,78 @@
+name: Check BC Parks Availability
+
+# Runs automatically on a schedule (on GitHub's servers, not your computer)
+# and can also be run by hand from the Actions tab.
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes (times are in UTC)
+  workflow_dispatch: {}       # adds a "Run workflow" button in the Actions tab
+
+# Lets the workflow save its "already seen" memory file back to the repo
+permissions:
+  contents: write
+
+# Never run two checks at the same time
+concurrency:
+  group: bc-campsite-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # ============================================================
+      #  EDIT THESE SETTINGS  (this is the only part you change)
+      # ============================================================
+      REC_AREA: "REPLACE_WITH_BC_PARKS_ID"   # BC Parks area ID, from the "Find Park IDs" workflow
+      START_DATE: "2026-06-27"               # first night to watch (YYYY-MM-DD)
+      END_DATE: "2026-09-15"                 # last night to watch  (YYYY-MM-DD)
+      CAMPGROUNDS: ""                        # space-separated park IDs, e.g. "-100 -101 -102"
+                                             # leave blank to watch ALL BC Parks campgrounds
+      # ============================================================
+
+      # These come from repository Secrets — you never put real values here.
+      EMAIL_TO_ADDRESS: ${{ secrets.EMAIL_TO_ADDRESS }}
+      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      EMAIL_SUBJECT_LINE: "BC Parks campsite available!"
+      TZ: "America/Vancouver"
+
+    steps:
+      - name: Get the project files
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install camply
+        run: pip install camply
+
+      - name: Search for available campsites
+        run: |
+          CG_ARGS=""
+          for cg in $CAMPGROUNDS; do
+            CG_ARGS="$CG_ARGS --campground $cg"
+          done
+          camply campsites \
+            --provider goingtocamp \
+            --rec-area "$REC_AREA" \
+            $CG_ARGS \
+            --start-date "$START_DATE" \
+            --end-date "$END_DATE" \
+            --notifications email \
+            --search-once \
+            --offline-search \
+            --offline-search-path camply_state.json
+
+      - name: Remember which sites were already reported
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain camply_state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add camply_state.json
+            git commit -m "Update seen-campsites memory [skip ci]"
+            git push
+          fi
