@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       rec_area:
-        description: "BC Parks area ID (leave BLANK the first time to list the areas)"
+        description: "BC Parks area ID (blank = list areas; 12 = find park IDs)"
         required: false
         default: ""
 
@@ -22,16 +22,17 @@ jobs:
       - name: Install camply
         run: pip install camply
 
-      - name: List recreation areas or campgrounds
+      - name: List areas or find park IDs
         run: |
           if [ -z "${{ github.event.inputs.rec_area }}" ]; then
             echo "=============== BC PARKS RECREATION AREAS ==============="
-            echo "Find the row that says 'BC Parks' and note its ID number."
-            echo
             camply recreation-areas --provider goingtocamp
           else
-            echo "=========== CAMPGROUNDS IN AREA ${{ github.event.inputs.rec_area }} ==========="
-            echo "Each row is a park. Note the ID of every park you want to watch."
-            echo
-            camply campgrounds --provider goingtocamp --rec-area "${{ github.event.inputs.rec_area }}"
+            AREA="${{ github.event.inputs.rec_area }}"
+            for park in "Golden Ears" "Cultus Lake" "Porteau Cove" "Alice Lake" "Brandywine Falls" "Nairn Falls"; do
+              echo "================ $park ================"
+              camply campgrounds --provider goingtocamp --rec-area "$AREA" --search "$park" \
+                || echo "(no match or error for $park — skipping)"
+              echo
+            done
           fi
