@@ -18,7 +18,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install camply
-       run: pip install "git+https://github.com/juftin/camply.git@refs/pull/378/head"
+        run: pip install "git+https://github.com/juftin/camply.git@refs/pull/378/head"
+
       - name: List areas or find park IDs
         run: |
           if [ -z "${{ github.event.inputs.rec_area }}" ]; then
