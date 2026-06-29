@@ -1,7 +1,5 @@
 name: Find Park IDs
 
-# A helper you run by hand to discover the ID numbers camply needs.
-
 on:
   workflow_dispatch:
     inputs:
@@ -19,10 +17,9 @@ jobs:
         with:
           python-version: "3.11"
 
- - name: Install camply (latest source, includes BC Parks fix)
-     run: pip install "git+https://github.com/juftin/camply.git"
+      - name: Install camply
+        run: pip install "git+https://github.com/juftin/camply.git"
 
-    
       - name: List areas or find park IDs
         run: |
           if [ -z "${{ github.event.inputs.rec_area }}" ]; then
