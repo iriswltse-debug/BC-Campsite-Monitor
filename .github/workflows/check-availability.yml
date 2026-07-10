@@ -16,15 +16,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     env:
-      # ============================================================
-      #  YOUR SETTINGS
-      # ============================================================
-      REC_AREA: "12"                         # BC Parks
-      START_DATE: "2026-06-29"               # first night to watch (YYYY-MM-DD)
-      END_DATE: "2026-09-15"                 # last night to watch  (YYYY-MM-DD)
-      # Golden Ears, Cultus Lake, Porteau Cove, Alice Lake, Nairn Falls
+      REC_AREA: "12"
+      START_DATE: "2026-06-29"
+      END_DATE: "2026-09-15"
       CAMPGROUNDS: "-2147483606 -2147483623 -2147483550 -2147483647 -2147483564"
-      # ============================================================
 
       EMAIL_TO_ADDRESS: ${{ secrets.EMAIL_TO_ADDRESS }}
       EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
@@ -42,9 +37,11 @@ jobs:
           python-version: "3.11"
 
       - name: Install camply
+        continue-on-error: true
         run: pip install "git+https://github.com/juftin/camply.git@refs/pull/378/head"
 
       - name: Search for available campsites
+        continue-on-error: true
         run: |
           CG_ARGS=""
           for cg in $CAMPGROUNDS; do
@@ -63,6 +60,7 @@ jobs:
 
       - name: Remember which sites were already reported
         if: always()
+        continue-on-error: true
         run: |
           if [ -n "$(git status --porcelain camply_state.json)" ]; then
             git config user.name "github-actions[bot]"
